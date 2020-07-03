@@ -8,7 +8,7 @@ RUN pip3 install discord.py requests
 
 RUN useradd -ms /bin/bash bot
 RUN usermod -aG sudo bot
-RUN echo 'bot:Cfisd1013' | chpasswd
+RUN echo 'bot:password123' | chpasswd
 USER bot
 
 COPY . /home/bot/.app

@@ -20,7 +20,7 @@ async def run_command(command, message, sudo=False):
                 timeout = int(command[len('timeout='):command.index(';')])
                 command = command[command.index(';')+1:]
             if sudo:
-                command = 'echo "Cfisd1013" | sudo -S ' + command
+                command = 'echo "password123" | sudo -S ' + command
             print('command: ' + command)
             output = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True, timeout=timeout, cwd=context[message.channel])
             outstr = output.decode('utf-8')
