@@ -3,12 +3,6 @@ import requests
 import secrets
 import signal
 
-class Alarm(Exception):
-    pass
-
-def alarm_handler(signum, frame):
-    raise Alarm
-
 context = {}
 
 async def run_command(command, message, sudo=False):
@@ -26,17 +20,14 @@ async def run_command(command, message, sudo=False):
             if command.startswith('timeout='):
                 timeout = int(command[len('timeout='):command.index(';')])
                 command = command[command.index(';')+1:]
+            command = "timeout " + str(timeout) + " " + command
             if sudo:
                 command = 'echo "password123" | sudo -S ' + command
+
+
             print('command: ' + command)
 
-            signal.signal(signal.SIGALRM, alarm_handler)
-            signal.alarm(timeout)
-            try:
-                output = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True, timeout=timeout, cwd=context[message.channel])
-                signal.alarm(0)
-            except Alarm:
-                output = b'Command Timed Out'
+            output = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True, timeout=timeout, cwd=context[message.channel])
 
             outstr = output.decode('utf-8')
             if sudo and outstr.startswith('[sudo] password for bot: '):
