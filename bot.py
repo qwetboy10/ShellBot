@@ -1,6 +1,13 @@
 import discord, subprocess, os, re, shlex
 import requests
 import secrets
+import signal
+
+class Alarm(Exception):
+    pass
+
+def alarm_handler(signum, frame):
+    raise Alarm
 
 context = {}
 
@@ -22,7 +29,15 @@ async def run_command(command, message, sudo=False):
             if sudo:
                 command = 'echo "password123" | sudo -S ' + command
             print('command: ' + command)
-            output = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True, timeout=timeout, cwd=context[message.channel])
+
+            signal.signal(signal.SIGALRM, alarm_handler)
+            signal.alarm(timeout)
+            try:
+                output = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True, timeout=timeout, cwd=context[message.channel])
+                signal.alarm(0)
+            except Alarm:
+                output = b'Command Timed Out'
+
             outstr = output.decode('utf-8')
             if sudo and outstr.startswith('[sudo] password for bot: '):
                 outstr = outstr[len('[sudo] password for bot: '):]
