@@ -12,7 +12,7 @@ async def run_command(command, message, sudo=False):
     elif command.startswith('`') and command.endswith('`'):
         command = command[1:-1]
     if command == 'cd ~':
-        context[message.channel] = 'cd ~'
+        context[message.channel] = '/home/bot'
     elif command.startswith('cd '):
         context[message.channel] = command[3:]
     else:
@@ -38,6 +38,9 @@ async def run_command(command, message, sudo=False):
                 await message.channel.send(os.getcwd())
         except subprocess.TimeoutExpired as e:
             await message.channel.send('command timed out')
+        except FileNotFoundError as e:
+                await message.channel.send(str(e))
+                print('error: ' + str(e))
         except Exception as e:
             try:
                 await message.channel.send('Error with exit code: ' + str(e.returncode) + '\n')
@@ -47,6 +50,7 @@ async def run_command(command, message, sudo=False):
                 if len(outstr) > 0:
                     await message.channel.send('```' + outstr + '```')
             except Exception as e:
+                await message.channel.send(str(e))
                 print('error: ' + str(e))
 
 async def handle_file(message):
