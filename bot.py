@@ -1,9 +1,14 @@
-import discord, subprocess, os, re, shlex
+import discord
+import os
+import re
 import requests
 import secrets
+import shlex
 import signal
+import subprocess
 
 context = {}
+
 
 async def run_command(command, message, sudo=False):
     timeout = 1
@@ -19,15 +24,15 @@ async def run_command(command, message, sudo=False):
         try:
             if command.startswith('timeout='):
                 timeout = int(command[len('timeout='):command.index(';')])
-                command = command[command.index(';')+1:]
+                command = command[command.index(';') + 1:]
             command = "timeout " + str(timeout) + " " + command
             if sudo:
                 command = 'echo "password123" | sudo -S ' + command
 
-
             print('command: ' + command)
 
-            output = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True, timeout=timeout, cwd=context[message.channel])
+            output = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True, timeout=timeout,
+                                             cwd=context[message.channel])
 
             outstr = output.decode('utf-8')
             if sudo and outstr.startswith('[sudo] password for bot: '):
@@ -39,8 +44,8 @@ async def run_command(command, message, sudo=False):
         except subprocess.TimeoutExpired as e:
             await message.channel.send('command timed out')
         except FileNotFoundError as e:
-                await message.channel.send(str(e))
-                print('error: ' + str(e))
+            await message.channel.send(str(e))
+            print('error: ' + str(e))
         except Exception as e:
             try:
                 await message.channel.send('Error with exit code: ' + str(e.returncode) + '\n')
@@ -53,10 +58,11 @@ async def run_command(command, message, sudo=False):
                 await message.channel.send(str(e))
                 print('error: ' + str(e))
 
+
 async def handle_file(message):
     for attachment in message.attachments:
         print('fetching: ' + attachment.url)
-        name = attachment.url[attachment.url.rindex('/')+1:]
+        name = attachment.url[attachment.url.rindex('/') + 1:]
         r = requests.get(attachment.url)
         with open(context[message.channel] + '/' + name, 'wb') as out:
             out.write(r.content)
@@ -70,7 +76,7 @@ class ShellClient(discord.Client):
     async def on_message(self, message):
         try:
             if isinstance(message.channel, discord.TextChannel) and isinstance(message.author, discord.Member):
-                if not message.channel in context:
+                if message.channel not in context:
                     context[message.channel] = "/home/bot"
                 channel = message.channel
                 author = message.author
@@ -85,6 +91,7 @@ class ShellClient(discord.Client):
                             await run_command(message.content, message, sudo=sudo)
         except Exception as e:
             print('big error: ' + str(e))
+
 
 client = ShellClient()
 client.run(secrets.token)
